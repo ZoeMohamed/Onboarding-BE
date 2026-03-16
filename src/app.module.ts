@@ -6,22 +6,35 @@ import { AuthModule } from './modules/auth/auth.module';
 import { config } from './infrastructure/config';
 import { User } from './modules/user/entities/user.entity';
 
+const sslConfig = config.db.sslEnabled
+  ? {
+      rejectUnauthorized: config.db.sslRejectUnauthorized,
+    }
+  : undefined;
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: config.db.host,
-      port: config.db.port,
-      username: config.db.username,
-      password: config.db.password,
-      database: config.db.name,
+      ...(config.db.url
+        ? {
+            url: config.db.url,
+          }
+        : {
+            host: config.db.host,
+            port: config.db.port,
+            username: config.db.username,
+            password: config.db.password,
+            database: config.db.name,
+          }),
       entities: [User],
       synchronize: config.app.env !== 'production',
-      ssl: config.db.sslEnabled
+      ssl: sslConfig,
+      extra: sslConfig
         ? {
-            rejectUnauthorized: config.db.sslRejectUnauthorized,
+            ssl: sslConfig,
           }
-        : false,
+        : undefined,
     }),
     AuthModule,
   ],
