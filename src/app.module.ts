@@ -17,6 +17,11 @@ import { User } from './modules/user/entities/user.entity';
       database: config.db.name,
       entities: [User],
       synchronize: config.app.env !== 'production',
+      ssl: config.db.sslEnabled
+        ? {
+            rejectUnauthorized: config.db.sslRejectUnauthorized,
+          }
+        : false,
     }),
     AuthModule,
   ],
