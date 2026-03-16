@@ -5,6 +5,7 @@ import { cleanupOpenApiDoc, ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { config } from './infrastructure/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -46,6 +47,6 @@ async function bootstrap() {
     customSiteTitle: 'Onboarding BE API Docs',
   });
 
-  await app.listen(process.env.APP_PORT ?? 3000);
+  await app.listen(parseInt(config.app.port, 10));
 }
 void bootstrap();
