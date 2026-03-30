@@ -46,6 +46,7 @@ export const config = {
       process.env.DB_SSL_REJECT_UNAUTHORIZED,
       false,
     ),
+    synchronize: toBoolean(process.env.DB_SYNCHRONIZE, false),
   },
   jwt: {
     secret: process.env.JWT_SECRET || '',
