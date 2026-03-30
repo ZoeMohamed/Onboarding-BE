@@ -4,6 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { config } from './infrastructure/config';
+import { EventCategoryModule } from './modules/event-category/event-category.module';
+import { EventCategory } from './modules/event-category/entities/event-category.entity';
 import { User } from './modules/user/entities/user.entity';
 
 const sslConfig = config.db.sslEnabled
@@ -27,8 +29,8 @@ const sslConfig = config.db.sslEnabled
             password: config.db.password,
             database: config.db.name,
           }),
-      entities: [User],
-      synchronize: config.app.env !== 'production',
+      entities: [User, EventCategory],
+      synchronize: config.db.synchronize,
       ssl: sslConfig,
       extra: sslConfig
         ? {
@@ -37,6 +39,7 @@ const sslConfig = config.db.sslEnabled
         : undefined,
     }),
     AuthModule,
+    EventCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
