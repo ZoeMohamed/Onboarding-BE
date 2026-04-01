@@ -1,8 +1,11 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { CACHE_KEY_PREFIX } from '../../../common/constants/cache.constant';
+import { CacheInvalidationService } from '../../../common/services/cache-invalidation.service';
 import { QueryFailedError } from 'typeorm';
 import { CreateEventCategoryDto } from '../dto/create-event-category.dto';
 import { ListEventCategoriesQueryDto } from '../dto/list-event-categories-query.dto';
@@ -24,7 +27,12 @@ type ListResult = {
 
 @Injectable()
 export class EventCategoryService {
-  constructor(private readonly repository: EventCategoryRepository) {}
+  private readonly logger = new Logger(EventCategoryService.name);
+
+  constructor(
+    private readonly repository: EventCategoryRepository,
+    private readonly cacheInvalidationService: CacheInvalidationService,
+  ) {}
 
   async create(dto: CreateEventCategoryDto): Promise<EventCategory> {
     const name = dto.name.trim();
@@ -35,10 +43,13 @@ export class EventCategoryService {
     }
 
     try {
-      return await this.repository.create({
+      const created = await this.repository.create({
         name,
         description: dto.description?.trim() || null,
       });
+
+      await this.invalidateEventCategoryListCache();
+      return created;
     } catch (error) {
       if (this.getDbErrorCode(error) === '23505') {
         throw new ConflictException('Nama kategori sudah digunakan');
@@ -97,7 +108,9 @@ export class EventCategoryService {
     }
 
     try {
-      return await this.repository.save(category);
+      const updated = await this.repository.save(category);
+      await this.invalidateEventCategoryListCache();
+      return updated;
     } catch (error) {
       if (this.getDbErrorCode(error) === '23505') {
         throw new ConflictException('Nama kategori sudah digunakan');
@@ -115,6 +128,8 @@ export class EventCategoryService {
       if (!deleted) {
         throw new NotFoundException('Kategori event tidak ditemukan');
       }
+
+      await this.invalidateEventCategoryListCache();
     } catch (error) {
       if (this.getDbErrorCode(error) === '23503') {
         throw new ConflictException(
@@ -133,5 +148,17 @@ export class EventCategoryService {
     return (
       error as QueryFailedError & { driverError?: { code?: string } }
     ).driverError?.code;
+  }
+
+  private async invalidateEventCategoryListCache(): Promise<void> {
+    try {
+      await this.cacheInvalidationService.invalidateByPrefixes([
+        CACHE_KEY_PREFIX.eventCategoriesList,
+      ]);
+    } catch (error) {
+      this.logger.warn(
+        `Gagal invalidate cache kategori: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
+    }
   }
 }

@@ -10,7 +10,9 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheTTL } from '@nestjs/cache-manager';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
@@ -20,11 +22,14 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { ApiPaginationQuery } from '../../../../common/decorators/api-pagination-query.decorator';
+import { CACHE_TTL_MS_MULTIPLIER } from '../../../../common/constants/cache.constant';
 import { UserRole } from '../../../../common/enums/user-role.enum';
+import { EventCategoriesListCacheInterceptor } from '../../../../common/interceptors/event-categories-list-cache.interceptor';
+import { config } from '../../../../infrastructure/config';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
@@ -61,24 +66,13 @@ export class EventCategoryController {
     description: 'Daftar kategori dengan pagination',
     type: EventCategoryListResponseDto,
   })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: 'Default 1',
-    example: 1,
+  @ApiPaginationQuery({
+    includeSearch: true,
+    searchDescription: 'Cari berdasarkan nama/deskripsi',
+    searchExample: 'music',
   })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: 'Default 10, max 100',
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Cari berdasarkan nama/deskripsi',
-    example: 'music',
-  })
+  @UseInterceptors(EventCategoriesListCacheInterceptor)
+  @CacheTTL(config.redis.ttl * CACHE_TTL_MS_MULTIPLIER)
   @Get()
   list(@Query() query: ListEventCategoriesQueryDto) {
     return this.application.list(query);

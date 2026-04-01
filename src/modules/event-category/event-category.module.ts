@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventCategoriesListCacheInterceptor } from '../../common/interceptors/event-categories-list-cache.interceptor';
+import { CacheInvalidationService } from '../../common/services/cache-invalidation.service';
 import { AuthModule } from '../auth/auth.module';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { EventCategoryApplication } from './applications/event-category.application';
@@ -16,6 +18,9 @@ import { EventCategoryService } from './services/event-category.service';
     EventCategoryService,
     EventCategoryRepository,
     RolesGuard,
+    EventCategoriesListCacheInterceptor,
+    CacheInvalidationService,
   ],
+  exports: [EventCategoryRepository],
 })
 export class EventCategoryModule {}

@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { config } from '../infrastructure/config';
 import { EventCategory } from '../modules/event-category/entities/event-category.entity';
+import { Event } from '../modules/event/entities/event.entity';
 import { User } from '../modules/user/entities/user.entity';
 
 const sslConfig = config.db.sslEnabled
@@ -23,7 +24,7 @@ const AppDataSource = new DataSource({
         password: config.db.password,
         database: config.db.name,
       }),
-  entities: [User, EventCategory],
+  entities: [User, EventCategory, Event],
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
   synchronize: false,
   ssl: sslConfig,
