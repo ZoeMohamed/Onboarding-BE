@@ -1,4 +1,5 @@
 import { CacheModule } from '@nestjs/cache-manager';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import type { CacheManagerStore } from 'cache-manager';
@@ -19,6 +20,7 @@ import { EventCategoryModule } from './modules/event-category/event-category.mod
 import { EventCategory } from './modules/event-category/entities/event-category.entity';
 import { EventModule } from './modules/event/event.module';
 import { Event } from './modules/event/entities/event.entity';
+import { QueueModule } from './modules/queue/queue.module';
 import { User } from './modules/user/entities/user.entity';
 
 const sslConfig = config.db.sslEnabled
@@ -54,8 +56,22 @@ const parseRedisUrl = (redisUrl: string): RedisOptions => {
   };
 };
 
+const resolveBullRedisConnection = (): RedisOptions => {
+  if (config.redis.url) {
+    return parseRedisUrl(config.redis.url);
+  }
+
+  return {
+    host: '127.0.0.1',
+    port: 6379,
+  };
+};
+
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: resolveBullRedisConnection(),
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
@@ -110,6 +126,7 @@ const parseRedisUrl = (redisUrl: string): RedisOptions => {
     AuthModule,
     EventCategoryModule,
     EventModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],
