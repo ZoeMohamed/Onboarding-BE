@@ -1,6 +1,21 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
+const ISO_DATE_TIME_MESSAGE = 'Format tanggal harus ISO datetime (contoh: 2026-09-01T10:00:00.000Z)';
+
+const IsoDateTimeOptionalSchema = (fieldName: 'startDate' | 'endDate') =>
+  z
+    .string()
+    .trim()
+    .datetime({
+      offset: true,
+      message: `Format ${fieldName} tidak valid`,
+    })
+    .refine((value) => !Number.isNaN(Date.parse(value)), {
+      message: ISO_DATE_TIME_MESSAGE,
+    })
+    .optional();
+
 const UpdateEventSchema = z
   .object({
     title: z
@@ -18,16 +33,8 @@ const UpdateEventSchema = z
       .min(1, 'Lokasi wajib diisi')
       .max(255, 'Lokasi maksimal 255 karakter')
       .optional(),
-    startDate: z.coerce
-      .date({
-        message: 'Format startDate tidak valid',
-      })
-      .optional(),
-    endDate: z.coerce
-      .date({
-        message: 'Format endDate tidak valid',
-      })
-      .optional(),
+    startDate: IsoDateTimeOptionalSchema('startDate'),
+    endDate: IsoDateTimeOptionalSchema('endDate'),
     price: z.coerce.number().positive('Harga event harus lebih dari 0').optional(),
     totalTickets: z.coerce
       .number()
@@ -55,7 +62,7 @@ const UpdateEventSchema = z
       if (!value.startDate || !value.endDate) {
         return true;
       }
-      return value.endDate > value.startDate;
+      return Date.parse(value.endDate) > Date.parse(value.startDate);
     },
     {
       message: 'endDate harus setelah startDate',

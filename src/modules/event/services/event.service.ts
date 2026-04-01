@@ -45,8 +45,8 @@ export class EventService {
       title: dto.title.trim(),
       description: dto.description?.trim() || null,
       location: dto.location.trim(),
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: new Date(dto.startDate),
+      endDate: new Date(dto.endDate),
       price: dto.price,
       totalTickets: dto.totalTickets,
       soldTickets: 0,
@@ -124,11 +124,11 @@ export class EventService {
     }
 
     if (dto.startDate !== undefined) {
-      event.startDate = dto.startDate;
+      event.startDate = new Date(dto.startDate);
     }
 
     if (dto.endDate !== undefined) {
-      event.endDate = dto.endDate;
+      event.endDate = new Date(dto.endDate);
     }
 
     if (event.endDate <= event.startDate) {
