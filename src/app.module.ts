@@ -20,6 +20,9 @@ import { EventCategoryModule } from './modules/event-category/event-category.mod
 import { EventCategory } from './modules/event-category/entities/event-category.entity';
 import { EventModule } from './modules/event/event.module';
 import { Event } from './modules/event/entities/event.entity';
+import { OrderModule } from './modules/order/order.module';
+import { Order } from './modules/order/entities/order.entity';
+import { Ticket } from './modules/order/entities/ticket.entity';
 import { QueueModule } from './modules/queue/queue.module';
 import { User } from './modules/user/entities/user.entity';
 
@@ -114,7 +117,7 @@ const resolveBullRedisConnection = (): RedisOptions => {
             password: config.db.password,
             database: config.db.name,
           }),
-      entities: [User, EventCategory, Event],
+      entities: [User, EventCategory, Event, Order, Ticket],
       synchronize: config.db.synchronize,
       ssl: sslConfig,
       extra: sslConfig
@@ -127,6 +130,7 @@ const resolveBullRedisConnection = (): RedisOptions => {
     EventCategoryModule,
     EventModule,
     QueueModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

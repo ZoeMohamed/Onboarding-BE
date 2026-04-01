@@ -3,6 +3,8 @@ import { DataSource } from 'typeorm';
 import { config } from '../infrastructure/config';
 import { EventCategory } from '../modules/event-category/entities/event-category.entity';
 import { Event } from '../modules/event/entities/event.entity';
+import { Order } from '../modules/order/entities/order.entity';
+import { Ticket } from '../modules/order/entities/ticket.entity';
 import { User } from '../modules/user/entities/user.entity';
 
 const sslConfig = config.db.sslEnabled
@@ -24,7 +26,7 @@ const AppDataSource = new DataSource({
         password: config.db.password,
         database: config.db.name,
       }),
-  entities: [User, EventCategory, Event],
+  entities: [User, EventCategory, Event, Order, Ticket],
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
   synchronize: false,
   ssl: sslConfig,
