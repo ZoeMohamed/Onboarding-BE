@@ -33,6 +33,7 @@ export const config = {
   app: {
     port: process.env.PORT || process.env.APP_PORT || '3000',
     env: runtimeEnv,
+    baseUrl: process.env.APP_BASE_URL || '',
   },
   db: {
     url: process.env.DATABASE_URL || '',
@@ -55,5 +56,18 @@ export const config = {
   redis: {
     url: process.env.REDIS_URL || '',
     ttl: parseInt(process.env.REDIS_TTL || '300', 10),
+  },
+  xendit: {
+    secretKey: process.env.XENDIT_SECRET_KEY || '',
+    webhookToken:
+      process.env.XENDIT_WEBHOOK_TOKEN ||
+      (runtimeEnv === 'test' ? 'xendit-test-webhook-token' : ''),
+    apiBaseUrl: process.env.XENDIT_API_BASE_URL || 'https://api.xendit.co',
+    successRedirectUrl: process.env.XENDIT_SUCCESS_REDIRECT_URL || '',
+    failureRedirectUrl: process.env.XENDIT_FAILURE_REDIRECT_URL || '',
+    invoiceDurationSeconds: parseInt(
+      process.env.XENDIT_INVOICE_DURATION_SECONDS || '86400',
+      10,
+    ),
   },
 };
