@@ -16,7 +16,9 @@ export class OrderRepository {
     private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
-  runInTransaction<T>(handler: (manager: EntityManager) => Promise<T>): Promise<T> {
+  runInTransaction<T>(
+    handler: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
     return this.dataSource.transaction(handler);
   }
 
@@ -36,7 +38,38 @@ export class OrderRepository {
     return manager.getRepository(Event).save(event);
   }
 
-  async createOrder(manager: EntityManager, data: Partial<Order>): Promise<Order> {
+  findOrderByIdForUpdate(
+    manager: EntityManager,
+    orderId: string,
+  ): Promise<Order | null> {
+    return manager
+      .getRepository(Order)
+      .createQueryBuilder('ord')
+      .setLock('pessimistic_write')
+      .where('ord.id = :orderId', { orderId })
+      .getOne();
+  }
+
+  findOrderByXenditInvoiceIdForUpdate(
+    manager: EntityManager,
+    xenditInvoiceId: string,
+  ): Promise<Order | null> {
+    return manager
+      .getRepository(Order)
+      .createQueryBuilder('ord')
+      .setLock('pessimistic_write')
+      .where('ord."xenditInvoiceId" = :xenditInvoiceId', { xenditInvoiceId })
+      .getOne();
+  }
+
+  saveOrder(manager: EntityManager, order: Order): Promise<Order> {
+    return manager.getRepository(Order).save(order);
+  }
+
+  async createOrder(
+    manager: EntityManager,
+    data: Partial<Order>,
+  ): Promise<Order> {
     const entity = manager.getRepository(Order).create(data);
     return manager.getRepository(Order).save(entity);
   }
@@ -70,6 +103,10 @@ export class OrderRepository {
       .createQueryBuilder('ord')
       .where('ord.id = :id', { id })
       .getOne();
+  }
+
+  save(order: Order): Promise<Order> {
+    return this.orderRepository.save(order);
   }
 
   findByIdWithTickets(id: string): Promise<Order | null> {
