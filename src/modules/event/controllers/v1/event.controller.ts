@@ -16,6 +16,7 @@ import { CacheTTL } from '@nestjs/cache-manager';
 import {
   ApiBearerAuth,
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
@@ -133,6 +134,9 @@ export class EventController {
   @ApiNotFoundResponse({ description: 'Event tidak ditemukan' })
   @ApiBadRequestResponse({
     description: 'Tidak bisa delete event yang sudah dipublish',
+  })
+  @ApiConflictResponse({
+    description: 'Event tidak dapat dihapus karena masih dipakai order',
   })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

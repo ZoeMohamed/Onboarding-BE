@@ -180,4 +180,20 @@ describe('Phase 8 - Payment (e2e)', () => {
 
     expect(Number(afterExpired.body.soldTickets)).toBe(soldBefore);
   });
+
+  it('DELETE event with existing order should return 409 (not 500)', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/v1/events/${eventId}/unpublish`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const response = await request(app.getHttpServer())
+      .delete(`/api/v1/events/${eventId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(409);
+
+    expect(response.body.message).toBe(
+      'Event tidak dapat dihapus karena masih dipakai order',
+    );
+  });
 });

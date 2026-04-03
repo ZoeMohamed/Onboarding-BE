@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -15,6 +16,7 @@ import { ListEventsQueryDto } from '../dto/list-events-query.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { Event } from '../entities/event.entity';
 import { EventRepository } from './event.repository';
+import { QueryFailedError } from 'typeorm';
 
 type ListResult = {
   data: Event[];
@@ -147,13 +149,23 @@ export class EventService {
       throw new BadRequestException('Tidak bisa delete event yang sudah dipublish');
     }
 
-    const deleted = await this.eventRepository.deleteById(id);
+    try {
+      const deleted = await this.eventRepository.deleteById(id);
 
-    if (!deleted) {
-      throw new NotFoundException('Event tidak ditemukan');
+      if (!deleted) {
+        throw new NotFoundException('Event tidak ditemukan');
+      }
+
+      await this.invalidateEventListCache();
+    } catch (error) {
+      if (this.getDbErrorCode(error) === '23503') {
+        throw new ConflictException(
+          'Event tidak dapat dihapus karena masih dipakai order',
+        );
+      }
+
+      throw error;
     }
-
-    await this.invalidateEventListCache();
   }
 
   async publish(id: string): Promise<Event> {
@@ -210,5 +222,15 @@ export class EventService {
         `Gagal invalidate cache event: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
+  }
+
+  private getDbErrorCode(error: unknown): string | undefined {
+    if (!(error instanceof QueryFailedError)) {
+      return undefined;
+    }
+
+    return (
+      error as QueryFailedError & { driverError?: { code?: string } }
+    ).driverError?.code;
   }
 }
