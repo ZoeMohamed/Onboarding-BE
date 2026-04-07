@@ -11,6 +11,8 @@ import { customAlphabet } from 'nanoid';
 import { EventStatus } from '../../../common/enums/event-status.enum';
 import { OrderStatus } from '../../../common/enums/order-status.enum';
 import {
+  JOB_GENERATE_TICKET_ASSETS,
+  JOB_ORDER_PAID_NOTIFICATION,
   QUEUE_EMAIL,
   QUEUE_TICKET,
 } from '../../queue/constants/queue.constant';
@@ -355,7 +357,7 @@ export class OrderService {
     tickets: Ticket[],
   ): Promise<void> {
     try {
-      await this.ticketQueue.add('generate-ticket-assets', {
+      await this.ticketQueue.add(JOB_GENERATE_TICKET_ASSETS, {
         orderId,
         tickets: tickets.map((ticket) => ({
           id: ticket.id,
@@ -371,10 +373,31 @@ export class OrderService {
 
   private async dispatchPaidEmailJob(order: Order): Promise<void> {
     try {
-      await this.emailQueue.add('order-paid-notification', {
+      const [user, event] = await Promise.all([
+        this.orderRepository.findUserById(order.userId),
+        this.orderRepository.findEventById(order.eventId),
+      ]);
+
+      if (!user?.email) {
+        this.logger.warn(
+          `Skip email order ${order.id} karena email user tidak ditemukan`,
+        );
+        return;
+      }
+
+      await this.emailQueue.add(JOB_ORDER_PAID_NOTIFICATION, {
         orderId: order.id,
-        userId: order.userId,
-        eventId: order.eventId,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+        event: {
+          id: order.eventId,
+          title: event?.title || 'Event',
+        },
+        totalPrice: order.totalPrice,
+        quantity: order.quantity,
         status: order.status,
       });
     } catch (error) {

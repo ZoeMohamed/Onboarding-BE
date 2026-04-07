@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Event } from '../../event/entities/event.entity';
+import { User } from '../../user/entities/user.entity';
 import { Order } from '../entities/order.entity';
 import { Ticket } from '../entities/ticket.entity';
 
@@ -124,5 +125,25 @@ export class OrderRepository {
       .where('ticket."orderId" = :orderId', { orderId })
       .orderBy('ticket."createdAt"', 'ASC')
       .getMany();
+  }
+
+  findUserById(
+    userId: string,
+  ): Promise<Pick<User, 'id' | 'email' | 'name'> | null> {
+    return this.dataSource
+      .getRepository(User)
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.email', 'user.name'])
+      .where('user.id = :userId', { userId })
+      .getOne();
+  }
+
+  findEventById(eventId: string): Promise<Pick<Event, 'id' | 'title'> | null> {
+    return this.dataSource
+      .getRepository(Event)
+      .createQueryBuilder('event')
+      .select(['event.id', 'event.title'])
+      .where('event.id = :eventId', { eventId })
+      .getOne();
   }
 }

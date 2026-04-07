@@ -70,4 +70,16 @@ export const config = {
       10,
     ),
   },
+  mail: {
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: toBoolean(process.env.SMTP_SECURE, false),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || '',
+    enabled: toBoolean(
+      process.env.SMTP_ENABLED,
+      Boolean(process.env.SMTP_HOST && process.env.SMTP_FROM),
+    ),
+  },
 };
