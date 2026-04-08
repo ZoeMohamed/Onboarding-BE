@@ -17,6 +17,7 @@ import {
   QUEUE_TICKET,
 } from '../../queue/constants/queue.constant';
 import { User } from '../../user/entities/user.entity';
+import { CheckInTicketDto } from '../dto/check-in-ticket.dto';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { ListOrdersQueryDto } from '../dto/list-orders-query.dto';
 import { XenditInvoiceWebhookDto } from '../dto/xendit-invoice-webhook.dto';
@@ -55,6 +56,20 @@ type WebhookResult = {
   orderId: string | null;
   status: OrderStatus | null;
   message: string;
+};
+
+type CheckInTicketResult = {
+  message: string;
+  orderId: string;
+  ticketId: string;
+  ticketCode: string;
+  isUsed: boolean;
+};
+
+type ParsedQrPayload = {
+  ticketCode: string;
+  ticketId?: string;
+  orderId?: string;
 };
 
 @Injectable()
@@ -170,6 +185,52 @@ export class OrderService {
     }
 
     return order;
+  }
+
+  async checkInTicket(dto: CheckInTicketDto): Promise<CheckInTicketResult> {
+    const payload = this.parseQrPayload(dto.qrPayload);
+
+    return this.orderRepository.runInTransaction(async (manager) => {
+      const ticket = await this.orderRepository.findTicketByCodeWithOrderForUpdate(
+        manager,
+        payload.ticketCode,
+      );
+
+      if (!ticket) {
+        throw new NotFoundException('Ticket tidak ditemukan');
+      }
+
+      if (payload.ticketId && payload.ticketId !== ticket.id) {
+        throw new BadRequestException('QR ticket tidak valid');
+      }
+
+      if (payload.orderId && payload.orderId !== ticket.orderId) {
+        throw new BadRequestException('QR ticket tidak valid');
+      }
+
+      if (!ticket.order) {
+        throw new NotFoundException('Order ticket tidak ditemukan');
+      }
+
+      if (ticket.order.status !== OrderStatus.PAID) {
+        throw new BadRequestException('Order belum dibayar');
+      }
+
+      if (ticket.isUsed) {
+        throw new BadRequestException('Ticket sudah digunakan');
+      }
+
+      ticket.isUsed = true;
+      const savedTicket = await this.orderRepository.saveTicket(manager, ticket);
+
+      return {
+        message: 'Check-in berhasil',
+        orderId: savedTicket.orderId,
+        ticketId: savedTicket.id,
+        ticketCode: savedTicket.ticketCode,
+        isUsed: savedTicket.isUsed,
+      };
+    });
   }
 
   async handleXenditInvoiceWebhook(
@@ -412,5 +473,51 @@ export class OrderService {
         `Gagal push email queue untuk order ${order.id}: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
+  }
+
+  private parseQrPayload(qrPayload: string): ParsedQrPayload {
+    const raw = qrPayload.trim();
+    if (!raw) {
+      throw new BadRequestException('qrPayload wajib diisi');
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw) as unknown;
+    } catch {
+      throw new BadRequestException('Format QR tidak valid');
+    }
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new BadRequestException('Format QR tidak valid');
+    }
+
+    const record = parsed as Record<string, unknown>;
+    const ticketCode = this.readString(record.ticketCode);
+    if (!ticketCode) {
+      throw new BadRequestException('ticketCode pada QR tidak valid');
+    }
+
+    const ticketId = this.readString(record.ticketId) || undefined;
+    const orderId = this.readString(record.orderId) || undefined;
+
+    return {
+      ticketCode,
+      ticketId,
+      orderId,
+    };
+  }
+
+  private readString(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed;
   }
 }

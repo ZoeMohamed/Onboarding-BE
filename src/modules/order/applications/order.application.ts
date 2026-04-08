@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '../../user/entities/user.entity';
+import { CheckInTicketDto } from '../dto/check-in-ticket.dto';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { ListOrdersQueryDto } from '../dto/list-orders-query.dto';
 import { XenditInvoiceWebhookDto } from '../dto/xendit-invoice-webhook.dto';
@@ -19,6 +20,10 @@ export class OrderApplication {
 
   detail(id: string, currentUser: User) {
     return this.service.detail(id, currentUser);
+  }
+
+  checkInTicket(dto: CheckInTicketDto) {
+    return this.service.checkInTicket(dto);
   }
 
   handleXenditInvoiceWebhook(

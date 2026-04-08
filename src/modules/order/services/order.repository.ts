@@ -63,8 +63,25 @@ export class OrderRepository {
       .getOne();
   }
 
+  findTicketByCodeWithOrderForUpdate(
+    manager: EntityManager,
+    ticketCode: string,
+  ): Promise<Ticket | null> {
+    return manager
+      .getRepository(Ticket)
+      .createQueryBuilder('ticket')
+      .innerJoinAndSelect('ticket.order', 'ord')
+      .setLock('pessimistic_write')
+      .where('ticket."ticketCode" = :ticketCode', { ticketCode })
+      .getOne();
+  }
+
   saveOrder(manager: EntityManager, order: Order): Promise<Order> {
     return manager.getRepository(Order).save(order);
+  }
+
+  saveTicket(manager: EntityManager, ticket: Ticket): Promise<Ticket> {
+    return manager.getRepository(Ticket).save(ticket);
   }
 
   async createOrder(

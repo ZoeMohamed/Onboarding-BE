@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -28,6 +29,8 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { User } from '../../../user/entities/user.entity';
 import { OrderApplication } from '../../applications/order.application';
 import { CreateOrderDto } from '../../dto/create-order.dto';
+import { CheckInTicketDto } from '../../dto/check-in-ticket.dto';
+import { CheckInTicketResponseDto } from '../../dto/check-in-ticket-response.dto';
 import { OrderListResponseDto } from '../../dto/order-list-response.dto';
 import { OrderResponseDto } from '../../dto/order-response.dto';
 import { ListOrdersQueryDto } from '../../dto/list-orders-query.dto';
@@ -80,5 +83,24 @@ export class OrderController {
     @CurrentUser() currentUser: User,
   ) {
     return this.application.detail(id, currentUser);
+  }
+
+  @ApiOperation({ summary: 'Check-in tiket via QR (ADMIN only)' })
+  @ApiOkResponse({
+    description: 'Ticket berhasil check-in',
+    type: CheckInTicketResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({ description: 'Akses ditolak (role bukan ADMIN)' })
+  @ApiNotFoundResponse({ description: 'Ticket tidak ditemukan' })
+  @ApiBadRequestResponse({
+    description:
+      'Format QR tidak valid / Order belum dibayar / Ticket sudah digunakan',
+  })
+  @Roles(UserRole.ADMIN)
+  @Post('tickets/check-in')
+  @HttpCode(200)
+  checkInTicket(@Body() dto: CheckInTicketDto) {
+    return this.application.checkInTicket(dto);
   }
 }
