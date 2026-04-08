@@ -24,6 +24,7 @@ import { OrderModule } from './modules/order/order.module';
 import { Order } from './modules/order/entities/order.entity';
 import { Ticket } from './modules/order/entities/ticket.entity';
 import { QueueModule } from './modules/queue/queue.module';
+import { StorageModule } from './modules/storage/storage.module';
 import { User } from './modules/user/entities/user.entity';
 
 const sslConfig = config.db.sslEnabled
@@ -129,6 +130,7 @@ const resolveBullRedisConnection = (): RedisOptions => {
     AuthModule,
     EventCategoryModule,
     EventModule,
+    StorageModule,
     QueueModule,
     OrderModule,
   ],

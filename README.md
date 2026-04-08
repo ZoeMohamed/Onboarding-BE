@@ -25,6 +25,33 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Ticket Asset Storage (Free Option)
+
+Project ini menggunakan Cloudinary sebagai opsi storage gratis untuk QR image dan PDF ticket.
+
+### Environment Variables
+
+Tambahkan env berikut di local dan Render:
+
+```env
+STORAGE_PROVIDER=cloudinary
+CLOUDINARY_ENABLED=true
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_FOLDER=ticket-assets
+```
+
+Jika `CLOUDINARY_ENABLED=false` atau credential belum lengkap, API tetap jalan normal dan worker ticket akan skip upload asset (tidak crash).
+
+### Flow Upload Asset
+
+1. User membuat order.
+2. Backend enqueue job `generate-ticket-assets`.
+3. `TicketWorker` generate QR PNG + PDF.
+4. File diupload ke Cloudinary.
+5. Kolom `tickets.qrCodeUrl` dan `tickets.pdfUrl` diupdate.
+
 ## Project setup
 
 ```bash

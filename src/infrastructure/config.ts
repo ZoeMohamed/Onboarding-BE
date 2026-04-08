@@ -82,4 +82,21 @@ export const config = {
       Boolean(process.env.SMTP_HOST && process.env.SMTP_FROM),
     ),
   },
+  storage: {
+    provider: process.env.STORAGE_PROVIDER || 'cloudinary',
+    cloudinary: {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+      apiKey: process.env.CLOUDINARY_API_KEY || '',
+      apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+      folder: process.env.CLOUDINARY_FOLDER || 'ticket-assets',
+      enabled: toBoolean(
+        process.env.CLOUDINARY_ENABLED,
+        Boolean(
+          process.env.CLOUDINARY_CLOUD_NAME &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_API_SECRET,
+        ),
+      ),
+    },
+  },
 };
