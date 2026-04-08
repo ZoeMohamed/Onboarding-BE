@@ -399,6 +399,13 @@ export class OrderService {
         totalPrice: order.totalPrice,
         quantity: order.quantity,
         status: order.status,
+      }, {
+        attempts: 12,
+        backoff: {
+          type: 'fixed',
+          delay: 5000,
+        },
+        removeOnComplete: true,
       });
     } catch (error) {
       this.logger.warn(

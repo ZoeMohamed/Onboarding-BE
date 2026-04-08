@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Order } from '../order/entities/order.entity';
 import { Ticket } from '../order/entities/ticket.entity';
 import { StorageModule } from '../storage/storage.module';
 import { QUEUE_EMAIL, QUEUE_TICKET } from './constants/queue.constant';
@@ -9,7 +10,7 @@ import { TicketWorker } from './services/ticket.worker';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ticket]),
+    TypeOrmModule.forFeature([Ticket, Order]),
     StorageModule,
     BullModule.registerQueue(
       {
